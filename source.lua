@@ -146,7 +146,7 @@ if makefolder and isfolder and writefile and isfile then
 	end)
 end
 
-currentVersion = "6.3.4 🇷🇺🇺🇦"
+currentVersion = "6.3.4"
 
 ScaledHolder = Instance.new("Frame")
 Scale = Instance.new("UIScale")
@@ -344,7 +344,7 @@ Title.BorderSizePixel = 0
 Title.Size = UDim2.new(0, 250, 0, 20)
 Title.Font = Enum.Font.SourceSans
 Title.TextSize = 18
-Title.Text = "Infinite Yield FE v" .. currentVersion
+Title.Text = "Infinite Yield FE v" .. currentVersion .. " 🇷🇺🇺🇦"
 
 do
 	local emoji = ({
@@ -5090,7 +5090,6 @@ function ccmd(str)
 end
 
 function execCmd(cmdStr,speaker,store)
-	warn(cmdStr)
 	cmdStr = cmdStr:gsub("%s+$","")
 	task.spawn(function()
 		local rawCmdStr = cmdStr
@@ -5132,7 +5131,7 @@ function execCmd(cmdStr,speaker,store)
 
 			local args = splitString(v,split)
 			local cmdName = args[1]
-			local cmd = findCmd(cmdName) or findCmd(ccmd(cmdName))
+			local cmd = findCmd(cmdName) or findCmd(ccmd(cmdName)) or (findCmd(ccmd(string.gsub(cmdName,string.sub(cmdName,1,2),""))))
 			if cmd then
 				table.remove(args,1)
 				cargs = args
@@ -13121,7 +13120,7 @@ task.spawn(function()
 
 	if success then
 		if currentVersion ~= latestVersionInfo.Version then
-			notify("Outdated", "Get the new version at infyiff.github.io")
+			notify("Устаревшая версия", "Оригинальный Infinite Yield получил обновление, вы можете взять его здесь: infyiff.github.io")
 		end
 
 		if latestVersionInfo.Announcement and latestVersionInfo.Announcement ~= "" then
