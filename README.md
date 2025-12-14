@@ -14,7 +14,7 @@ loadstring(game:HttpGet("https://github.com/VasilyBebra/iy_ru/raw/refs/heads/mai
 
 ## Разработчики
 
-### Создатель русификатора: [Edge](https://github.com/VasilyBebra)
+### Создатель русификатора: [VasilyBebra](https://github.com/VasilyBebra)
 ### Создатель: [Edge](https://github.com/EdgeIY)
 ### Разработчики: [Moon](https://github.com/LorekeeperZinnia), [Zwolf](https://github.com/luatsuki), [Hunter](https://github.com/tooslzy), [Toon](https://github.com/Toon-arch), [Peyton](https://github.com/peyton2465), [ATP](https://github.com/ionizedparticle)
 
