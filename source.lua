@@ -4430,6 +4430,7 @@ function autoComplete(str,curText)
 end
 
 CMDs = {}
+CMDs[#CMDs + 1] = {NAME = 'rucord / supportru / helpru', DESC = 'Дискорд сервер разработчика русификатора.'}
 CMDs[#CMDs + 1] = {NAME = 'discord / support / help', DESC = 'Invite to the Infinite Yield support server.'}
 CMDs[#CMDs + 1] = {NAME = 'guiscale [number]', DESC = 'Changes the size of the gui. [number] accepts both decimals and whole numbers. Min is 0.4 and Max is 2'}
 CMDs[#CMDs + 1] = {NAME = 'console', DESC = 'Loads Roblox console'}
@@ -6552,6 +6553,30 @@ addcmd('discord', {'support', 'help'}, function(args, speaker)
 				cmd = 'INVITE_BROWSER',
 				nonce = HttpService:GenerateGUID(false),
 				args = {code = 'dYHag43eeU'}
+			})
+		})
+	end
+end)
+
+addcmd('rucord', {'supportru', 'helpru'}, function(args, speaker)
+	if everyClipboard then
+		toClipboard('https://discord.com/invite/sTvnNeXYxF')
+		notify('Приглашение в дискорд', 'Скопировано в буфер обмена!\ndiscord.gg/sTvnNeXYxF')
+	else
+		notify('Discord Invite', 'discord.gg/sTvnNeXYxF')
+	end
+	if httprequest then
+		httprequest({
+			Url = 'http://127.0.0.1:6463/rpc?v=1',
+			Method = 'POST',
+			Headers = {
+				['Content-Type'] = 'application/json',
+				Origin = 'https://discord.com'
+			},
+			Body = HttpService:JSONEncode({
+				cmd = 'INVITE_BROWSER',
+				nonce = HttpService:GenerateGUID(false),
+				args = {code = 'sTvnNeXYxF'}
 			})
 		})
 	end
