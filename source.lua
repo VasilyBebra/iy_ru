@@ -4292,6 +4292,30 @@ end
 
 dragMain(Title,Holder)
 
+local tbl_up = {
+	["Й"] = "Q", ["Ц"] = "W", ["У"] = "E", ["К"] = "R", ["Е"] = "T", ["Н"] = "Y",
+	["Г"] = "U", ["Ш"] = "I", ["Щ"] = "O", ["З"] = "P", ["Ф"] = "A", ["Ы"] = "S",
+	["В"] = "D", ["А"] = "F", ["П"] = "G", ["Р"] = "H", ["О"] = "J", ["Л"] = "K",
+	["Д"] = "L", ["Я"] = "Z", ["Ч"] = "X", ["С"] = "C", ["М"] = "V", ["И"] = "B",
+	["Т"] = "N", ["Ь"] = "M", ["І"] = "S",
+}
+local tbl_lw = {
+	["й"] = "Q", ["ц"] = "W", ["у"] = "E", ["к"] = "R", ["е"] = "T", ["н"] = "Y",
+	["г"] = "U", ["ш"] = "I", ["щ"] = "O", ["з"] = "P", ["ф"] = "A", ["ы"] = "S",
+	["в"] = "D", ["а"] = "F", ["п"] = "G", ["р"] = "H", ["о"] = "J", ["л"] = "K",
+	["д"] = "L", ["я"] = "Z", ["ч"] = "X", ["с"] = "C", ["м"] = "V", ["и"] = "B",
+	["т"] = "N", ["ь"] = "M", ["і"] = "S",
+}
+local tbl_all = {}
+for k, v in pairs(tbl_up) do tbl_all[k] = v end
+for k, v in pairs(tbl_lw) do tbl_all[k] = v end
+local ccmd = function(str)
+	for cyrillic, latin in pairs(tbl_all) do
+		str = string.gsub(str, cyrillic, latin)
+	end
+	return str
+end
+
 Match = function(name,str)
 	str = str:gsub("%W", "%%%1")
 	return name:lower():find(str:lower()) and true
@@ -4300,6 +4324,9 @@ end
 local canvasPos = Vector2.new(0,0)
 local topCommand = nil
 IndexContents = function(str,bool,cmdbar,Ianim)
+	str = string.gsub(str,"Ж","")
+	str = string.gsub(str,"ж","")
+	str = ccmd(str)
 	CMDsF.CanvasPosition = Vector2.new(0,0)
 	local SizeY = 0
 	local indexnum = 0
@@ -5065,30 +5092,6 @@ local lastCmds = {}
 local historyCount = 0
 local split=" "
 local lastBreakTime = 0
-
-local tbl_up = {
-	["Й"] = "Q", ["Ц"] = "W", ["У"] = "E", ["К"] = "R", ["Е"] = "T", ["Н"] = "Y",
-	["Г"] = "U", ["Ш"] = "I", ["Щ"] = "O", ["З"] = "P", ["Ф"] = "A", ["Ы"] = "S",
-	["В"] = "D", ["А"] = "F", ["П"] = "G", ["Р"] = "H", ["О"] = "J", ["Л"] = "K",
-	["Д"] = "L", ["Я"] = "Z", ["Ч"] = "X", ["С"] = "C", ["М"] = "V", ["И"] = "B",
-	["Т"] = "N", ["Ь"] = "M", ["І"] = "S",
-}
-local tbl_lw = {
-	["й"] = "Q", ["ц"] = "W", ["у"] = "E", ["к"] = "R", ["е"] = "T", ["н"] = "Y",
-	["г"] = "U", ["ш"] = "I", ["щ"] = "O", ["з"] = "P", ["ф"] = "A", ["ы"] = "S",
-	["в"] = "D", ["а"] = "F", ["п"] = "G", ["р"] = "H", ["о"] = "J", ["л"] = "K",
-	["д"] = "L", ["я"] = "Z", ["ч"] = "X", ["с"] = "C", ["м"] = "V", ["и"] = "B",
-	["т"] = "N", ["ь"] = "M", ["і"] = "S",
-}
-local tbl_all = {}
-for k, v in pairs(tbl_up) do tbl_all[k] = v end
-for k, v in pairs(tbl_lw) do tbl_all[k] = v end
-function ccmd(str)
-	for cyrillic, latin in pairs(tbl_all) do
-		str = string.gsub(str, cyrillic, latin)
-	end
-	return str
-end
 
 function execCmd(cmdStr,speaker,store)
 	cmdStr = cmdStr:gsub("%s+$","")
@@ -6489,7 +6492,7 @@ local TeleportCheck = false
 Players.LocalPlayer.OnTeleport:Connect(function(State)
 	if KeepInfYield and (not TeleportCheck) and queueteleport then
 		TeleportCheck = true
-		queueteleport("loadstring(game:HttpGet('https://github.com/VasilyBebra/iy_ru/raw/refs/heads/main/source.lua'))()")
+		queueteleport("loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))()")
 	end
 end)
 
