@@ -1,4 +1,4 @@
-if IY_LOADED and not _G.IY_DEBUG == true then
+if IY_LOADED and not _G.IY_DEBUG then
 	-- error("Infinite Yield is already running!", 0)
 	return
 end
@@ -146,7 +146,7 @@ if makefolder and isfolder and writefile and isfile then
 	end)
 end
 
-currentVersion = "6.3.4"
+currentVersion = "6.3.5"
 
 ScaledHolder = Instance.new("Frame")
 Scale = Instance.new("UIScale")
@@ -2065,7 +2065,7 @@ function vtype(o, t)
 end
 
 function getRoot(char)
-	local rootPart = char:FindFirstChild('HumanoidRootPart') or char:FindFirstChild('Torso') or char:FindFirstChild('UpperTorso')
+	local rootPart = char:FindFirstChildOfClass('Humanoid').RootPart
 	return rootPart
 end
 
@@ -4292,23 +4292,18 @@ end
 
 dragMain(Title,Holder)
 
-local tbl_up = {
+local tbl_all = {
 	["Й"] = "Q", ["Ц"] = "W", ["У"] = "E", ["К"] = "R", ["Е"] = "T", ["Н"] = "Y",
 	["Г"] = "U", ["Ш"] = "I", ["Щ"] = "O", ["З"] = "P", ["Ф"] = "A", ["Ы"] = "S",
 	["В"] = "D", ["А"] = "F", ["П"] = "G", ["Р"] = "H", ["О"] = "J", ["Л"] = "K",
 	["Д"] = "L", ["Я"] = "Z", ["Ч"] = "X", ["С"] = "C", ["М"] = "V", ["И"] = "B",
-	["Т"] = "N", ["Ь"] = "M", ["І"] = "S",
-}
-local tbl_lw = {
-	["й"] = "Q", ["ц"] = "W", ["у"] = "E", ["к"] = "R", ["е"] = "T", ["н"] = "Y",
+	["Т"] = "N", ["Ь"] = "M", ["І"] = "S", ["й"] = "Q", ["ц"] = "W", ["у"] = "E", ["к"] = "R", ["е"] = "T", ["н"] = "Y",
 	["г"] = "U", ["ш"] = "I", ["щ"] = "O", ["з"] = "P", ["ф"] = "A", ["ы"] = "S",
 	["в"] = "D", ["а"] = "F", ["п"] = "G", ["р"] = "H", ["о"] = "J", ["л"] = "K",
 	["д"] = "L", ["я"] = "Z", ["ч"] = "X", ["с"] = "C", ["м"] = "V", ["и"] = "B",
 	["т"] = "N", ["ь"] = "M", ["і"] = "S",
 }
 local tbl_all = {}
-for k, v in pairs(tbl_up) do tbl_all[k] = v end
-for k, v in pairs(tbl_lw) do tbl_all[k] = v end
 local ccmd = function(str)
 	for cyrillic, latin in pairs(tbl_all) do
 		str = string.gsub(str, cyrillic, latin)
@@ -5004,12 +4999,18 @@ end
 local refreshCmd = false
 function refresh(plr)
 	refreshCmd = true
-	local root = plr.Character:WaitForChild("HumanoidRootPart")
+	local root = getRoot(plr.Character)
 	local pos = root.CFrame
 	local pos1 = workspace.CurrentCamera.CFrame
 	respawn(plr)
 	task.spawn(function()
-		plr.CharacterAdded:Wait():WaitForChild("HumanoidRootPart").CFrame, workspace.CurrentCamera.CFrame = pos, task.wait() and pos1
+		local char = plr.CharacterAdded:Wait()
+		local humanoid = char:FindFirstChildOfClass("Humanoid")
+		while not humanoid do
+			wait()
+			humanoid = char:FindFirstChildOfClass("Humanoid")
+		end
+		humanoid.RootPart.CFrame, workspace.CurrentCamera.CFrame = pos, task.wait() and pos1
 		refreshCmd = false
 	end)
 end
@@ -5055,18 +5056,8 @@ end)
 
 onDied()
 
-function getstring(begin)
-	local start = begin-1
-	local AA = '' for i,v in pairs(cargs) do
-		if i > start then
-			if AA ~= '' then
-				AA = AA .. ' ' .. v
-			else
-				AA = AA .. v
-			end
-		end
-	end
-	return AA
+function getstring(begin, args)
+	return table.concat(args or cargs, " ", begin)
 end
 
 findCmd=function(cmd_name)
@@ -5092,7 +5083,6 @@ local lastCmds = {}
 local historyCount = 0
 local split=" "
 local lastBreakTime = 0
-
 function execCmd(cmdStr,speaker,store)
 	cmdStr = cmdStr:gsub("%s+$","")
 	task.spawn(function()
@@ -6492,7 +6482,7 @@ local TeleportCheck = false
 Players.LocalPlayer.OnTeleport:Connect(function(State)
 	if KeepInfYield and (not TeleportCheck) and queueteleport then
 		TeleportCheck = true
-		queueteleport("loadstring(game:HttpGet('https://raw.githubusercontent.com/VasilyBebra/iy_ru/refs/heads/main/source.lua'))()")
+		queueteleport("loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))()")
 	end
 end)
 
@@ -6537,6 +6527,30 @@ addcmd('clraliases',{},function(args, speaker)
 	refreshaliases()
 end)
 
+addcmd('rucord', {'supportru', 'helpru'}, function(args, speaker)
+	if everyClipboard then
+		toClipboard('https://discord.com/invite/sTvnNeXYxF')
+		notify('Приглашение в дискорд', 'Скопировано в буфер обмена!\ndiscord.gg/sTvnNeXYxF')
+	else
+		notify('Discord Invite', 'discord.gg/sTvnNeXYxF')
+	end
+	if httprequest then
+		httprequest({
+			Url = 'http://127.0.0.1:6463/rpc?v=1',
+			Method = 'POST',
+			Headers = {
+				['Content-Type'] = 'application/json',
+				Origin = 'https://discord.com'
+			},
+			Body = HttpService:JSONEncode({
+				cmd = 'INVITE_BROWSER',
+				nonce = HttpService:GenerateGUID(false),
+				args = {code = 'sTvnNeXYxF'}
+			})
+		})
+	end	
+end)
+
 addcmd('discord', {'support', 'help'}, function(args, speaker)
 	if everyClipboard then
 		toClipboard('https://discord.com/invite/dYHag43eeU')
@@ -6561,33 +6575,10 @@ addcmd('discord', {'support', 'help'}, function(args, speaker)
 	end
 end)
 
-addcmd('rucord', {'supportru', 'helpru'}, function(args, speaker)
-	if everyClipboard then
-		toClipboard('https://discord.com/invite/sTvnNeXYxF')
-		notify('Приглашение в дискорд', 'Скопировано в буфер обмена!\ndiscord.gg/sTvnNeXYxF')
-	else
-		notify('Discord Invite', 'discord.gg/sTvnNeXYxF')
-	end
-	if httprequest then
-		httprequest({
-			Url = 'http://127.0.0.1:6463/rpc?v=1',
-			Method = 'POST',
-			Headers = {
-				['Content-Type'] = 'application/json',
-				Origin = 'https://discord.com'
-			},
-			Body = HttpService:JSONEncode({
-				cmd = 'INVITE_BROWSER',
-				nonce = HttpService:GenerateGUID(false),
-				args = {code = 'sTvnNeXYxF'}
-			})
-		})
-	end
-end)
-
 addcmd('keepiy', {}, function(args, speaker)
 	if queueteleport then
 		KeepInfYield = true
+		notify('KeepIY','Infinite Yield will now run after you teleport')
 		updatesaves()
 	else
 		notify('Incompatible Exploit','Your exploit does not support this command (missing queue_on_teleport)')
@@ -6597,6 +6588,7 @@ end)
 addcmd('unkeepiy', {}, function(args, speaker)
 	if queueteleport then
 		KeepInfYield = false
+		notify('KeepIY','Infinite Yield will no longer run after you teleport')
 		updatesaves()
 	else
 		notify('Incompatible Exploit','Your exploit does not support this command (missing queue_on_teleport)')
@@ -7448,7 +7440,7 @@ addcmd('swim',{},function(args, speaker)
 		Humanoid:ChangeState(Enum.HumanoidStateType.Swimming)
 		swimbeat = RunService.Heartbeat:Connect(function()
 			pcall(function()
-				speaker.Character.HumanoidRootPart.Velocity = ((Humanoid.MoveDirection ~= Vector3.new() or UserInputService:IsKeyDown(Enum.KeyCode.Space)) and speaker.Character.HumanoidRootPart.Velocity or Vector3.new())
+				getRoot(speaker.Character).Humanoid.RootPart.Velocity = ((Humanoid.MoveDirection ~= Vector3.new() or UserInputService:IsKeyDown(Enum.KeyCode.Space)) and getRoot(speaker.Character).Humanoid.RootPart.Velocity or Vector3.new())
 			end)
 		end)
 		swimming = true
@@ -7484,9 +7476,9 @@ addcmd('toggleswim',{},function(args, speaker)
 end)
 
 addcmd('setwaypoint',{'swp','setwp','spos','saveposition','savepos'},function(args, speaker)
-	local WPName = tostring(getstring(1))
+	local WPName = tostring(getstring(1, args))
 	if getRoot(speaker.Character) then
-		notify('Modified Waypoints',"Created waypoint: "..getstring(1))
+		notify('Modified Waypoints',"Created waypoint: "..getstring(1, args))
 		local torso = getRoot(speaker.Character)
 		WayPoints[#WayPoints + 1] = {NAME = WPName, COORD = {math.floor(torso.Position.X), math.floor(torso.Position.Y), math.floor(torso.Position.Z)}, GAME = PlaceId}
 		if AllWaypoints ~= nil then
@@ -7498,9 +7490,9 @@ addcmd('setwaypoint',{'swp','setwp','spos','saveposition','savepos'},function(ar
 end)
 
 addcmd('waypointpos',{'wpp','setwaypointposition','setpos','setwaypoint','setwaypointpos'},function(args, speaker)
-	local WPName = tostring(getstring(1))
+	local WPName = tostring(getstring(1, args))
 	if getRoot(speaker.Character) then
-		notify('Modified Waypoints',"Created waypoint: "..getstring(1))
+		notify('Modified Waypoints',"Created waypoint: "..getstring(1, args))
 		WayPoints[#WayPoints + 1] = {NAME = WPName, COORD = {args[2], args[3], args[4]}, GAME = PlaceId}
 		if AllWaypoints ~= nil then
 			AllWaypoints[#AllWaypoints + 1] = {NAME = WPName, COORD = {args[2], args[3], args[4]}, GAME = PlaceId}
@@ -7565,7 +7557,7 @@ addcmd('hidewaypoints',{'hidewp','hidewps'},function(args, speaker)
 end)
 
 addcmd('waypoint',{'wp','lpos','loadposition','loadpos'},function(args, speaker)
-	local WPName = tostring(getstring(1))
+	local WPName = tostring(getstring(1, args))
 	if speaker.Character then
 		for i,_ in pairs(WayPoints) do
 			if tostring(WayPoints[i].NAME):lower() == tostring(WPName):lower() then
@@ -7592,7 +7584,7 @@ addcmd('tweenspeed',{'tspeed'},function(args, speaker)
 end)
 
 addcmd('tweenwaypoint',{'twp'},function(args, speaker)
-	local WPName = tostring(getstring(1))
+	local WPName = tostring(getstring(1, args))
 	if speaker.Character then
 		for i,_ in pairs(WayPoints) do
 			local x = WayPoints[i].COORD[1]
@@ -7611,7 +7603,7 @@ addcmd('tweenwaypoint',{'twp'},function(args, speaker)
 end)
 
 addcmd('walktowaypoint',{'wtwp'},function(args, speaker)
-	local WPName = tostring(getstring(1))
+	local WPName = tostring(getstring(1, args))
 	if speaker.Character then
 		for i,_ in pairs(WayPoints) do
 			local x = WayPoints[i].COORD[1]
@@ -7639,14 +7631,14 @@ end)
 
 addcmd('deletewaypoint',{'dwp','dpos','deleteposition','deletepos'},function(args, speaker)
 	for i,v in pairs(WayPoints) do
-		if v.NAME:lower() == tostring(getstring(1)):lower() then
+		if v.NAME:lower() == tostring(getstring(1, args)):lower() then
 			notify('Modified Waypoints',"Deleted waypoint: " .. v.NAME)
 			table.remove(WayPoints, i)
 		end
 	end
 	if AllWaypoints ~= nil and #AllWaypoints > 0 then
 		for i,v in pairs(AllWaypoints) do
-			if v.NAME:lower() == tostring(getstring(1)):lower() then
+			if v.NAME:lower() == tostring(getstring(1, args)):lower() then
 				if not v.GAME or v.GAME == PlaceId then
 					table.remove(AllWaypoints, i)
 				end
@@ -7654,7 +7646,7 @@ addcmd('deletewaypoint',{'dwp','dpos','deleteposition','deletepos'},function(arg
 		end
 	end
 	for i,v in pairs(pWayPoints) do
-		if v.NAME:lower() == tostring(getstring(1)):lower() then
+		if v.NAME:lower() == tostring(getstring(1, args)):lower() then
 			notify('Modified Waypoints',"Deleted waypoint: " .. v.NAME)
 			table.remove(pWayPoints, i)
 		end
@@ -8011,7 +8003,7 @@ addcmd("setfpscap", {"fpscap", "maxfps"}, function(args, speaker)
 end)
 
 addcmd('notify',{},function(args, speaker)
-	notify(getstring(1))
+	notify(getstring(1, args))
 end)
 
 addcmd('lastcommand',{'lastcmd'},function(args, speaker)
@@ -8082,7 +8074,7 @@ function partAdded(part)
 end
 
 addcmd('partesp',{},function(args, speaker)
-	local partEspName = getstring(1):lower()
+	local partEspName = getstring(1, args):lower()
 	if not FindInTable(espParts,partEspName) then
 		table.insert(espParts,partEspName)
 		for i,v in pairs(workspace:GetDescendants()) do
@@ -8106,7 +8098,7 @@ end)
 
 addcmd('unpartesp',{'nopartesp'},function(args, speaker)
 	if args[1] then
-		local partEspName = getstring(1):lower()
+		local partEspName = getstring(1, args):lower()
 		if FindInTable(espParts,partEspName) then
 			table.remove(espParts, GetInTable(espParts, partEspName))
 		end
@@ -8206,7 +8198,7 @@ addcmd('viewpart',{'viewp'},function(args, speaker)
 	StopFreecam()
 	if args[1] then
 		for i,v in pairs(workspace:GetDescendants()) do
-			if v.Name:lower() == getstring(1):lower() and v:IsA("BasePart") then
+			if v.Name:lower() == getstring(1, args):lower() and v:IsA("BasePart") then
 				wait(0.1)
 				workspace.CurrentCamera.CameraSubject = v
 			end
@@ -8499,7 +8491,7 @@ addcmd('freecampos',{'fcpos','fcp','freecamposition','fcposition'},function(args
 end)
 
 addcmd('freecamwaypoint',{'fcwp'},function(args, speaker)
-	local WPName = tostring(getstring(1))
+	local WPName = tostring(getstring(1, args))
 	if speaker.Character then
 		for i,_ in pairs(WayPoints) do
 			local x = WayPoints[i].COORD[1]
@@ -8678,38 +8670,38 @@ end)
 
 addcmd('delete',{'remove'},function(args, speaker)
 	for i,v in pairs(workspace:GetDescendants()) do
-		if v.Name:lower() == getstring(1):lower() then
+		if v.Name:lower() == getstring(1, args):lower() then
 			v:Destroy()
 		end
 	end
-	notify('Item(s) Deleted','Deleted ' ..getstring(1))
+	notify('Item(s) Deleted','Deleted ' ..getstring(1, args))
 end)
 
 addcmd('deleteclass',{'removeclass','deleteclassname','removeclassname','dc'},function(args, speaker)
 	for i,v in pairs(workspace:GetDescendants()) do
-		if v.ClassName:lower() == getstring(1):lower() then
+		if v.ClassName:lower() == getstring(1, args):lower() then
 			v:Destroy()
 		end
 	end
-	notify('Item(s) Deleted','Deleted items with ClassName ' ..getstring(1))
+	notify('Item(s) Deleted','Deleted items with ClassName ' ..getstring(1, args))
 end)
 
 addcmd('chardelete',{'charremove','cd'},function(args, speaker)
 	for i,v in pairs(speaker.Character:GetDescendants()) do
-		if v.Name:lower() == getstring(1):lower() then
+		if v.Name:lower() == getstring(1, args):lower() then
 			v:Destroy()
 		end
 	end
-	notify('Item(s) Deleted','Deleted ' ..getstring(1))
+	notify('Item(s) Deleted','Deleted ' ..getstring(1, args))
 end)
 
 addcmd('chardeleteclass',{'charremoveclass','chardeleteclassname','charremoveclassname','cdc'},function(args, speaker)
 	for i,v in pairs(speaker.Character:GetDescendants()) do
-		if v.ClassName:lower() == getstring(1):lower() then
+		if v.ClassName:lower() == getstring(1, args):lower() then
 			v:Destroy()
 		end
 	end
-	notify('Item(s) Deleted','Deleted items with ClassName ' ..getstring(1))
+	notify('Item(s) Deleted','Deleted items with ClassName ' ..getstring(1, args))
 end)
 
 addcmd('deletevelocity',{'dv','removevelocity','removeforces'},function(args, speaker)
@@ -9185,7 +9177,7 @@ end)
 addcmd('pathfindwalktowaypoint',{'pathfindwalktowp'},function(args, speaker)
 	waypointwalkto = false
 	wait()
-	local WPName = tostring(getstring(1))
+	local WPName = tostring(getstring(1, args))
 	local hum = Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
 	local path = PathService:CreatePath()
 	if speaker.Character then
@@ -9462,7 +9454,7 @@ addcmd('invisible',{'invis'},function(args, speaker)
 			else
 				IsInteger = false
 			end
-			local Pos = Player.Character.HumanoidRootPart.Position
+			local Pos = Player.Character.Humanoid.RootPart.Position
 			local Pos_String = tostring(Pos)
 			local Pos_Seperate = Pos_String:split(', ')
 			local X = tonumber(Pos_Seperate[1])
@@ -9522,7 +9514,7 @@ addcmd('invisible',{'invis'},function(args, speaker)
 	if IsInvis == true then return end
 	IsInvis = true
 	CF = workspace.CurrentCamera.CFrame
-	local CF_1 = Player.Character.HumanoidRootPart.CFrame
+	local CF_1 = Player.Character.Humanoid.RootPart.CFrame
 	Character:MoveTo(Vector3.new(0,math.pi*1000000,0))
 	workspace.CurrentCamera.CameraType = Enum.CameraType.Scriptable
 	wait(.2)
@@ -9530,7 +9522,7 @@ addcmd('invisible',{'invis'},function(args, speaker)
 	InvisibleCharacter = InvisibleCharacter
 	Character.Parent = Lighting
 	InvisibleCharacter.Parent = workspace
-	InvisibleCharacter.HumanoidRootPart.CFrame = CF_1
+	InvisibleCharacter.Humanoid.RootPart.CFrame = CF_1
 	Player.Character = InvisibleCharacter
 	execCmd('fixcam')
 	Player.Character.Animate.Disabled = true
@@ -9542,8 +9534,8 @@ addcmd('invisible',{'invis'},function(args, speaker)
 		invisDied:Disconnect()
 		CF = workspace.CurrentCamera.CFrame
 		Character = Character
-		local CF_1 = Player.Character.HumanoidRootPart.CFrame
-		Character.HumanoidRootPart.CFrame = CF_1
+		local CF_1 = Player.Character.Humanoid.RootPart.CFrame
+		Character.Humanoid.RootPart.CFrame = CF_1
 		InvisibleCharacter:Destroy()
 		Player.Character = Character
 		Character.Parent = workspace
@@ -9582,9 +9574,9 @@ addcmd('toolinvisible',{'toolinvis','tinvis'},function(args, speaker)
 			if touched == false then
 				touched = true
 				local function apply()
-					local no = Char.HumanoidRootPart:Clone()
-					wait(.25)
-					Char.HumanoidRootPart:Destroy()
+					local no = Char.Humanoid.RootPart:Clone()
+					task.wait(.25)
+					Char.Humanoid.RootPart:Destroy()
 					no.Parent = Char
 					Char:MoveTo(loc)
 					touched = false
@@ -9602,7 +9594,7 @@ addcmd('toolinvisible',{'toolinvis','tinvis'},function(args, speaker)
 		box:Destroy()
 		cleanUp:Disconnect()
 	end)
-	loc = Char.HumanoidRootPart.Position
+	loc = Char.Humanoid.RootPart.Position
 	Char:MoveTo(box.Position + Vector3.new(0,.5,0))
 end)
 
@@ -9874,10 +9866,10 @@ addcmd('edgejump',{'ejump'},function(args, speaker)
 			laststate = state
 			state = Human:GetState()
 			if laststate ~= state and state == Enum.HumanoidStateType.Freefall and laststate ~= Enum.HumanoidStateType.Jumping then
-				Char.HumanoidRootPart.CFrame = lastcf
-				Char.HumanoidRootPart.Velocity = Vector3.new(Char.HumanoidRootPart.Velocity.X, Human.JumpPower or Human.JumpHeight, Char.HumanoidRootPart.Velocity.Z)
+				Char.Humanoid.RootPart.CFrame = lastcf
+				Char.Humanoid.RootPart.Velocity = Vector3.new(Char.Humanoid.RootPart.Velocity.X, Human.JumpPower or Human.JumpHeight, Char.Humanoid.RootPart.Velocity.Z)
 			end
-			lastcf = Char.HumanoidRootPart.CFrame
+			lastcf = Char.Humanoid.RootPart.CFrame
 		end
 	end
 	edgejump()
@@ -9895,7 +9887,7 @@ addcmd('unedgejump',{'noedgejump', 'noejump', 'unejump'},function(args, speaker)
 end)
 
 addcmd("team", {}, function(args, speaker)
-	local teamName = getstring(1)
+	local teamName = getstring(1, args)
 	local team = nil
 	local root = speaker.Character and getRoot(speaker.Character)
 	for _, v in ipairs(Teams:GetChildren()) do
@@ -10183,7 +10175,7 @@ addcmd('tptool', {'teleporttool'}, function(args, speaker)
 	TpTool.Parent = speaker.Backpack
 	TpTool.Activated:Connect(function()
 		local Char = speaker.Character or workspace:FindFirstChild(speaker.Name)
-		local HRP = Char and Char:FindFirstChild("HumanoidRootPart")
+		local HRP = getRoot(Char)
 		if not Char or not HRP then
 			return warn("Failed to find HumanoidRootPart")
 		end
@@ -10578,7 +10570,7 @@ addcmd('headsit',{},function(args, speaker)
 end)
 
 addcmd('chat',{'say'},function(args, speaker)
-	local cString = getstring(1)
+	local cString = getstring(1, args)
 	chatMessage(cString)
 end)
 
@@ -10587,7 +10579,7 @@ spamming = false
 spamspeed = 1
 addcmd('spam',{},function(args, speaker)
 	spamming = true
-	local spamstring = getstring(1)
+	local spamstring = getstring(1, args)
 	repeat wait(spamspeed)
 		chatMessage(spamstring)
 	until spamming == false
@@ -10602,7 +10594,7 @@ addcmd('whisper',{'pm'},function(args, speaker)
 	for i,v in pairs(players)do
 		task.spawn(function()
 			local plrName = Players[v].Name
-			local pmstring = getstring(2)
+			local pmstring = getstring(2, args)
 			chatMessage("/w "..plrName.." "..pmstring)
 		end)
 	end
@@ -10616,7 +10608,7 @@ addcmd('pmspam',{},function(args, speaker)
 			local plrName = Players[v].Name
 			if FindInTable(pmspamming, plrName) then return end
 			table.insert(pmspamming, plrName)
-			local pmspamstring = getstring(2)
+			local pmspamstring = getstring(2, args)
 			repeat
 				if Players:FindFirstChild(v) then
 					wait(spamspeed)
@@ -10810,7 +10802,7 @@ end)
 
 addcmd('bringpart',{},function(args, speaker)
 	for i,v in pairs(workspace:GetDescendants()) do
-		if v.Name:lower() == getstring(1):lower() and v:IsA("BasePart") then
+		if v.Name:lower() == getstring(1, args):lower() and v:IsA("BasePart") then
 			v.CFrame = getRoot(speaker.Character).CFrame
 		end
 	end
@@ -10818,7 +10810,7 @@ end)
 
 addcmd('bringpartclass',{'bpc'},function(args, speaker)
 	for i,v in pairs(workspace:GetDescendants()) do
-		if v.ClassName:lower() == getstring(1):lower() and v:IsA("BasePart") then
+		if v.ClassName:lower() == getstring(1, args):lower() and v:IsA("BasePart") then
 			v.CFrame = getRoot(speaker.Character).CFrame
 		end
 	end
@@ -10827,7 +10819,7 @@ end)
 gotopartDelay = 0.1
 addcmd('gotopart',{'topart'},function(args, speaker)
 	for i,v in pairs(workspace:GetDescendants()) do
-		if v.Name:lower() == getstring(1):lower() and v:IsA("BasePart") then
+		if v.Name:lower() == getstring(1, args):lower() and v:IsA("BasePart") then
 			if speaker.Character:FindFirstChildOfClass('Humanoid') and speaker.Character:FindFirstChildOfClass('Humanoid').SeatPart then
 				speaker.Character:FindFirstChildOfClass('Humanoid').Sit = false
 				wait(.1)
@@ -10840,7 +10832,7 @@ end)
 
 addcmd('tweengotopart',{'tgotopart','ttopart'},function(args, speaker)
 	for i,v in pairs(workspace:GetDescendants()) do
-		if v.Name:lower() == getstring(1):lower() and v:IsA("BasePart") then
+		if v.Name:lower() == getstring(1, args):lower() and v:IsA("BasePart") then
 			if speaker.Character:FindFirstChildOfClass('Humanoid') and speaker.Character:FindFirstChildOfClass('Humanoid').SeatPart then
 				speaker.Character:FindFirstChildOfClass('Humanoid').Sit = false
 				wait(.1)
@@ -10853,7 +10845,7 @@ end)
 
 addcmd('gotopartclass',{'gpc'},function(args, speaker)
 	for i,v in pairs(workspace:GetDescendants()) do
-		if v.ClassName:lower() == getstring(1):lower() and v:IsA("BasePart") then
+		if v.ClassName:lower() == getstring(1, args):lower() and v:IsA("BasePart") then
 			if speaker.Character:FindFirstChildOfClass('Humanoid') and speaker.Character:FindFirstChildOfClass('Humanoid').SeatPart then
 				speaker.Character:FindFirstChildOfClass('Humanoid').Sit = false
 				wait(.1)
@@ -10866,7 +10858,7 @@ end)
 
 addcmd('tweengotopartclass',{'tgpc'},function(args, speaker)
 	for i,v in pairs(workspace:GetDescendants()) do
-		if v.ClassName:lower() == getstring(1):lower() and v:IsA("BasePart") then
+		if v.ClassName:lower() == getstring(1, args):lower() and v:IsA("BasePart") then
 			if speaker.Character:FindFirstChildOfClass('Humanoid') and speaker.Character:FindFirstChildOfClass('Humanoid').SeatPart then
 				speaker.Character:FindFirstChildOfClass('Humanoid').Sit = false
 				wait(.1)
@@ -10879,7 +10871,7 @@ end)
 
 addcmd('gotomodel',{'tomodel'},function(args, speaker)
 	for i,v in pairs(workspace:GetDescendants()) do
-		if v.Name:lower() == getstring(1):lower() and v:IsA("Model") then
+		if v.Name:lower() == getstring(1, args):lower() and v:IsA("Model") then
 			if speaker.Character:FindFirstChildOfClass('Humanoid') and speaker.Character:FindFirstChildOfClass('Humanoid').SeatPart then
 				speaker.Character:FindFirstChildOfClass('Humanoid').Sit = false
 				wait(.1)
@@ -10892,7 +10884,7 @@ end)
 
 addcmd('tweengotomodel',{'tgotomodel','ttomodel'},function(args, speaker)
 	for i,v in pairs(workspace:GetDescendants()) do
-		if v.Name:lower() == getstring(1):lower() and v:IsA("Model") then
+		if v.Name:lower() == getstring(1, args):lower() and v:IsA("Model") then
 			if speaker.Character:FindFirstChildOfClass('Humanoid') and speaker.Character:FindFirstChildOfClass('Humanoid').SeatPart then
 				speaker.Character:FindFirstChildOfClass('Humanoid').Sit = false
 				wait(.1)
@@ -10921,9 +10913,9 @@ end)
 addcmd('fireclickdetectors',{'firecd','firecds'}, function(args, speaker)
 	if fireclickdetector then
 		if args[1] then
-			local name = getstring(1)
+			local name = getstring(1, args):lower()
 			for _, descendant in ipairs(workspace:GetDescendants()) do
-				if descendant:IsA("ClickDetector") and descendant.Name == name or descendant.Parent.Name == name then
+				if descendant:IsA("ClickDetector") and descendant.Name:lower() == name or descendant.Parent.Name:lower() == name then
 					fireclickdetector(descendant)
 				end
 			end
@@ -10950,7 +10942,7 @@ end)
 addcmd('fireproximityprompts',{'firepp'},function(args, speaker)
 	if fireproximityprompt then
 		if args[1] then
-			local name = getstring(1)
+			local name = getstring(1, args)
 			for _, descendant in ipairs(workspace:GetDescendants()) do
 				if descendant:IsA("ProximityPrompt") and descendant.Name == name or descendant.Parent.Name == name then
 					fireproximityprompt(descendant)
@@ -11024,7 +11016,7 @@ end)
 local specifictoolremoval = {}
 addcmd('removespecifictool',{},function(args, speaker)
 	if args[1] and speaker:FindFirstChildOfClass("Backpack") then
-		local tool = string.lower(getstring(1))
+		local tool = string.lower(getstring(1, args))
 		local RST = RunService.RenderStepped:Connect(function()
 			if speaker:FindFirstChildOfClass("Backpack") then
 				for i,v in pairs(speaker:FindFirstChildOfClass("Backpack"):GetChildren()) do
@@ -11040,7 +11032,7 @@ end)
 
 addcmd('unremovespecifictool',{},function(args, speaker)
 	if args[1] then
-		local tool = string.lower(getstring(1))
+		local tool = string.lower(getstring(1, args))
 		if specifictoolremoval[tool] ~= nil then
 			specifictoolremoval[tool]:Disconnect()
 			specifictoolremoval[tool] = nil
@@ -11170,7 +11162,7 @@ addcmd('clearhats',{'cleanhats'},function(args, speaker)
 	if firetouchinterest then
 		local Player = Players.LocalPlayer
 		local Character = Player.Character
-		local Old = Character:FindFirstChild("HumanoidRootPart").CFrame
+		local Old = getRoot(Character).CFrame
 		local Hats = {}
 
 		for _, child in ipairs(workspace:GetChildren()) do
@@ -11185,7 +11177,7 @@ addcmd('clearhats',{'cleanhats'},function(args, speaker)
 
 		for i = 1, #Hats do
 			repeat RunService.Heartbeat:wait() until Hats[i]
-			firetouchinterest(Hats[i].Handle,Character:FindFirstChild("HumanoidRootPart"),0)
+			firetouchinterest(Hats[i].Handle,getRoot(Character),0)
 			repeat RunService.Heartbeat:wait() until Character:FindFirstChildOfClass("Accessory")
 			Character:FindFirstChildOfClass("Accessory"):Destroy()
 			repeat RunService.Heartbeat:wait() until not Character:FindFirstChildOfClass("Accessory")
@@ -11197,8 +11189,8 @@ addcmd('clearhats',{'cleanhats'},function(args, speaker)
 
 		for i = 1,20 do 
 			RunService.Heartbeat:Wait()
-			if Player.Character:FindFirstChild("HumanoidRootPart") then
-				Player.Character:FindFirstChild("HumanoidRootPart").CFrame = Old
+			if getRoot(Player.Character) then
+				getRoot(Player.Character).Humanoid.RootPart.CFrame = Old
 			end
 		end
 	else
@@ -11230,16 +11222,16 @@ addcmd('noroot',{'removeroot','rroot'},function(args, speaker)
 	if speaker.Character ~= nil then
 		local char = Players.LocalPlayer.Character
 		char.Parent = nil
-		char.HumanoidRootPart:Destroy()
+		char.Humanoid.RootPart:Destroy()
 		char.Parent = workspace
 	end
 end)
 
 addcmd('replaceroot',{'replacerootpart'},function(args, speaker)
-	if speaker.Character ~= nil and speaker.Character:FindFirstChild("HumanoidRootPart") then
+	if speaker.Character ~= nil and getRoot(speaker.Character) then
 		local Char = speaker.Character
 		local OldParent = Char.Parent
-		local HRP = Char and Char:FindFirstChild("HumanoidRootPart")
+		local HRP = Char and getRoot(Char)
 		local OldPos = HRP.CFrame
 		Char.Parent = game
 		local HRP1 = HRP:Clone()
@@ -11283,7 +11275,7 @@ local function GetHandleTools(p)
 end
 addcmd('dupetools', {'clonetools'}, function(args, speaker)
 	local LOOP_NUM = tonumber(args[1]) or 1
-	local OrigPos = speaker.Character.HumanoidRootPart.Position
+	local OrigPos = speaker.Character.Humanoid.RootPart.Position
 	local Tools, TempPos = {}, Vector3.new(math.random(-2e5, 2e5), 2e5, math.random(-2e5, 2e5))
 	for i = 1, LOOP_NUM do
 		local Human = speaker.Character:WaitForChild("Humanoid")
@@ -11309,7 +11301,7 @@ addcmd('dupetools', {'clonetools'}, function(args, speaker)
 		speaker.Character = speaker.Character:Destroy()
 		speaker.CharacterAdded:Wait():WaitForChild("Humanoid").Parent:MoveTo(LOOP_NUM == i and OrigPos or TempPos, wait(.1))
 		if i == LOOP_NUM or i % 5 == 0 then
-			local HRP = speaker.Character.HumanoidRootPart
+			local HRP = speaker.Character.Humanoid.RootPart
 			if type(firetouchinterest) == "function" then
 				for _, v in ipairs(Tools) do
 					v.Anchored = not firetouchinterest(v, HRP, 1, firetouchinterest(v, HRP, 0)) and false or false
@@ -11335,41 +11327,36 @@ addcmd('dupetools', {'clonetools'}, function(args, speaker)
 	end
 end)
 
-local RS = RunService.RenderStepped
-
 addcmd('touchinterests', {'touchinterest', 'firetouchinterests', 'firetouchinterest'}, function(args, speaker)
+	local Root = getRoot(speaker.Character) or speaker.Character:FindFirstChildWhichIsA("BasePart")
+
 	if not firetouchinterest then
 		notify("Incompatible Exploit", "Your exploit does not support this command (missing firetouchinterest)")
 		return
 	end
 
-	local root = getRoot(speaker.Character) or speaker.Character:FindFirstChildWhichIsA("BasePart")
-
-	local function touch(x)
-		x = x:FindFirstAncestorWhichIsA("Part")
+	local function Touch(x)
+		x = x.FindFirstAncestorWhichIsA(x, "Part")
 		if x then
-			if firetouchinterest then
-				task.spawn(function()
-					firetouchinterest(x, root, 1)
-					wait()
-					firetouchinterest(x, root, 0)
-				end)
-			end
-			x.CFrame = root.CFrame
+			return task.spawn(function()
+				firetouchinterest(x, Root, 1, wait() and firetouchinterest(x, Root, 0))
+			end)
 		end
+		x.CFrame = Root.CFrame
 	end
 
 	if args[1] then
-		local name = getstring(1)
-		for _, descendant in ipairs(workspace:GetDescendants()) do
-			if descendant:IsA("TouchTransmitter") and descendant.Name == name or descendant.Parent.Name == name then
-				touch(descendant)
+		local name = getstring(1, args):lower()
+		print(name..' -name')
+		for _, v in ipairs(workspace:GetDescendants()) do
+			if v:IsA("TouchTransmitter") and v.Name:lower() == name or v.Parent.Name:lower() == name then
+				Touch(v)
 			end
 		end
 	else
-		for _, descendant in ipairs(workspace:GetDescendants()) do
-			if descendant:IsA("TouchTransmitter") then
-				touch(descendant)
+		for _, v in ipairs(workspace:GetDescendants()) do
+			if v.IsA(v, "TouchTransmitter") then
+				Touch(v)
 			end
 		end
 	end
@@ -11941,7 +11928,12 @@ function kill(speaker,target,fast)
 				wait()
 				hrp.CFrame = CFrame.new(999999, workspace.FallenPartsDestroyHeight + 5,999999)
 			until not getRoot(target.Character) or not getRoot(speaker.Character)
-			speaker.CharacterAdded:Wait():WaitForChild("HumanoidRootPart").CFrame = NormPos
+			local char = speaker.CharacterAdded:Wait()
+			local humanoid = char:FindFirstChildOfClass("Humanoid") or char.ChildAdded:Wait()
+			while not humanoid:IsA("Humanoid") do
+				humanoid = char:FindFirstChildOfClass("Humanoid") or char.ChildAdded:Wait()
+			end
+			humanoid.RootPart.CFrame = NormPos
 		end
 	else
 		notify('Tool Required','You need to have an item in your inventory to use this command')
@@ -12016,7 +12008,12 @@ function bring(speaker,target,fast)
 				wait()
 				hrp.CFrame = NormPos
 			until not getRoot(target.Character) or not getRoot(speaker.Character)
-			speaker.CharacterAdded:Wait():WaitForChild("HumanoidRootPart").CFrame = NormPos
+			local char = speaker.CharacterAdded:Wait()
+			local humanoid = char:FindFirstChildOfClass("Humanoid") or char.ChildAdded:Wait()
+			while not humanoid:IsA("Humanoid") do
+				humanoid = char:FindFirstChildOfClass("Humanoid") or char.ChildAdded:Wait()
+			end
+			humanoid.RootPart.CFrame = NormPos
 		end
 	else
 		notify('Tool Required','You need to have an item in your inventory to use this command')
@@ -12041,7 +12038,12 @@ function teleport(speaker,target,target2,fast)
 				hrp.CFrame = hrp2.CFrame
 			until not getRoot(target.Character) or not getRoot(speaker.Character)
 			wait(1)
-			speaker.CharacterAdded:Wait():WaitForChild("HumanoidRootPart").CFrame = NormPos
+			local char = speaker.CharacterAdded:Wait()
+			local humanoid = char:FindFirstChildOfClass("Humanoid") or char.ChildAdded:Wait()
+			while not humanoid:IsA("Humanoid") do
+				humanoid = char:FindFirstChildOfClass("Humanoid") or char.ChildAdded:Wait()
+			end
+			humanoid.RootPart.CFrame = NormPos
 		end
 	else
 		notify('Tool Required','You need to have an item in your inventory to use this command')
@@ -12266,10 +12268,10 @@ addcmd('hitbox',{},function(args, speaker)
 	local players = getPlayer(args[1], speaker)
 	local transparency = args[3] and tonumber(args[3]) or 0.4
 	for i,v in pairs(players) do
-		if Players[v] ~= speaker and Players[v].Character:FindFirstChild('HumanoidRootPart') then
+		if Players[v] ~= speaker and getRoot(Players[v].Character) then
 			local sizeArg = tonumber(args[2])
 			local Size = Vector3.new(sizeArg,sizeArg,sizeArg)
-			local Root = Players[v].Character:FindFirstChild('HumanoidRootPart')
+			local Root = getRoot(Players[v].Character)
 			if Root:IsA("BasePart") then
 				Root.CanCollide = false
 				if not args[2] or sizeArg == 1 then
@@ -12290,11 +12292,11 @@ addcmd('stareat',{'stare'},function(args, speaker)
 		if stareLoop then
 			stareLoop:Disconnect()
 		end
-		if not Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart") and Players[v].Character:FindFirstChild("HumanoidRootPart") then return end
+		if not getRoot(Players.LocalPlayer.Character) and getRoot(Players[v].Character) then return end
 		local function stareFunc()
-			if Players.LocalPlayer.Character.PrimaryPart and Players:FindFirstChild(v) and Players[v].Character ~= nil and Players[v].Character:FindFirstChild("HumanoidRootPart") then
+			if Players.LocalPlayer.Character.PrimaryPart and Players:FindFirstChild(v) and Players[v].Character ~= nil and getRoot(Players[v].Character) then
 				local chrPos=Players.LocalPlayer.Character.PrimaryPart.Position
-				local tPos=Players[v].Character:FindFirstChild("HumanoidRootPart").Position
+				local tPos=getRoot(Players[v].Character).Position
 				local modTPos=Vector3.new(tPos.X,chrPos.Y,tPos.Z)
 				local newCF=CFrame.new(chrPos,modTPos)
 				Players.LocalPlayer.Character:SetPrimaryPartCFrame(newCF)
@@ -12329,7 +12331,7 @@ end)
 
 addcmd("rolewatch", {}, function(args, speaker)
 	local groupId = tonumber(args[1] or 0)
-	local roleName = args[2] and tostring(getstring(2))
+	local roleName = args[2] and tostring(getstring(2, args))
 	if groupId and roleName then
 		RolewatchData.Group = groupId
 		RolewatchData.Role = roleName
@@ -12914,15 +12916,15 @@ addcmd('unautokeypress',{'noautokeypress','unkeypress','nokeypress'},function(ar
 end)
 
 addcmd('addplugin',{'plugin'},function(args, speaker)
-	addPlugin(getstring(1))
+	addPlugin(getstring(1, args))
 end)
 
 addcmd('removeplugin',{'deleteplugin'},function(args, speaker)
-	deletePlugin(getstring(1))
+	deletePlugin(getstring(1, args))
 end)
 
 addcmd('reloadplugin',{},function(args, speaker)
-	local pluginName = getstring(1)
+	local pluginName = getstring(1, args)
 	deletePlugin(pluginName)
 	wait(1)
 	addPlugin(pluginName)
